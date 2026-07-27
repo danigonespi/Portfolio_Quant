@@ -20,16 +20,10 @@ class BinomialStockModel:
             raise ValueError(f"Violación de dominio: d debe ser estrictamente positivo (d={self.d}).")
             
         if self.d >= 1 + self.r:
-            raise ValueError(f"Condición de arbitraje violada: d ({self.d}) >= 1+r ({1+self.r}). "
-                "Un agente podría pedir prestado a la tasa r para comprar acciones, "
-                "garantizando repagar su deuda y logrando arbitraje."
-            )
+            raise ValueError(f"Condición de arbitraje violada: d ({self.d}) >= 1+r ({1+self.r}). ")
             
         if 1 + self.r >= self.u:
-            raise ValueError(f"Condición de arbitraje violada: 1+r ({1+self.r}) >= u ({self.u}). "
-                "Un agente podría vender en corto la acción e invirtiendo los ingresos "
-                "a la tasa r lograría arbitraje."
-            )
+            raise ValueError(f"Condición de arbitraje violada: 1+r ({1+self.r}) >= u ({self.u}). ")
 
     @property
     def risk_neutral_prob(self) -> Tuple[float, float]:

@@ -16,9 +16,7 @@ def test_v0_differs_from_naive_real_world_expectation(one_period_model):
     p_real = 0.7  # arbitraria, distinta de p̃=0.5
     v1_h = call.compute(np.array([4.0, one_period_model.s1_h]))
     v1_t = call.compute(np.array([4.0, one_period_model.s1_t]))
-    naive_expectation = (1 / (1 + one_period_model.r)) * (
-        p_real * v1_h + (1 - p_real) * v1_t
-    )
+    naive_expectation = (1 / (1 + one_period_model.r)) * (p_real * v1_h + (1 - p_real) * v1_t)
     assert v0 != pytest.approx(naive_expectation)
 
 def test_engine_price_matches_manual_formula(one_period_model):
