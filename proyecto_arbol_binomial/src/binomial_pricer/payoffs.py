@@ -13,6 +13,42 @@ class Payoff(ABC):
         """
         pass
 
+class PathDependentPayoff(Payoff, ABC):
+    """Payoff reducible a un estado (S_n, agregado_n). compute()
+    se implementa una sola vez aquí a partir de tres hooks, para
+    que una versión 'rápida' futura (Sección 1.3) nunca pueda
+    divergir silenciosamente de esta versión de referencia."""
+
+    @abstractmethod
+    def initial_aggregate(self, s0: float) -> float:
+        pass
+
+    @abstractmethod
+    def update_aggregate(self, aggregate: float, s_next: float) -> float:
+        pass
+
+    @abstractmethod
+    def terminal_value(self, s_final: float, aggregate_final: float) -> float:
+        pass
+
+    def compute(self, path: np.ndarray) -> float:
+        agg = self.initial_aggregate(path[0])
+        for s in path[1:]:
+            agg = self.update_aggregate(agg, s)
+        return self.terminal_value(path[-1], agg)
+
+class LookbackOption(PathDependentPayoff):
+    """Payoff M_N - S_N, M_n = max(S_0..S_n). Ejemplo 1.2.4."""
+    
+    def initial_aggregate(self, s0: float) -> float:
+        return s0
+
+    def update_aggregate(self, aggregate: float, s_next: float) -> float:
+        return max(aggregate, s_next)
+
+    def terminal_value(self, s_final: float, aggregate_final: float) -> float:
+        return aggregate_final - s_final
+
 
 class EuropeanCall(Payoff):
     def __init__(self, strike: float):

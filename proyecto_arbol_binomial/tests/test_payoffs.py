@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from binomial_pricer.payoffs import Payoff, EuropeanCall, EuropeanPut, Forward
+from binomial_pricer.payoffs import Payoff, EuropeanCall, EuropeanPut, Forward, LookbackOption, PathDependentPayoff
 
 def test_payoff_abc_cannot_be_instantiated_directly():
     with pytest.raises(TypeError):
@@ -20,7 +20,37 @@ class TestEuropeanPut:
 
 class TestForward:
     def test_can_be_negative(self):
-        """A diferencia de call/put, el forward no tiene floor en cero."""
         assert Forward(delivery_price=5.0).compute(np.array([4.0, 2.0])) == -3.0
     def test_can_be_positive(self):
         assert Forward(delivery_price=5.0).compute(np.array([4.0, 8.0])) == 3.0
+
+class TestLookbackOption:
+    def test_compute_manual_path_htt(self):
+        """V3(HTT) del Ejemplo 1.2.4 evaluado de forma aislada."""
+        payoff = LookbackOption()
+        path = np.array([4.0, 8.0, 4.0, 2.0])
+        assert payoff.compute(path) == 6.0
+
+class TestPathDependentPayoffHooks:
+    def test_hooks_called_in_correct_order(self):
+        class DummyPayoff(PathDependentPayoff):
+            def initial_aggregate(self, s0: float) -> float:
+                self.init_called = True
+                return s0
+                
+            def update_aggregate(self, aggregate: float, s_next: float) -> float:
+                self.update_called = True
+                return aggregate + s_next
+                
+            def terminal_value(self, s_final: float, aggregate_final: float) -> float:
+                self.terminal_called = True
+                return aggregate_final * s_final
+
+        dummy = DummyPayoff()
+        path = np.array([2.0, 3.0])
+        res = dummy.compute(path)
+        
+        assert getattr(dummy, "init_called", False)
+        assert getattr(dummy, "update_called", False)
+        assert getattr(dummy, "terminal_called", False)
+        assert res == 15.0  # (2.0 + 3.0) * 3.0 = 15.0

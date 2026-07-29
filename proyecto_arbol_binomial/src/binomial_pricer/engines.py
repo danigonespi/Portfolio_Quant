@@ -1,29 +1,57 @@
 import numpy as np
-from typing import Tuple
+from typing import Dict, Literal
+from dataclasses import dataclass, field
 from .equity_model import BinomialStockModel
 from .payoffs import Payoff
+from .lattice import RecombiningLattice
+
+@dataclass
+class PricingResult:
+    v0: float
+    delta0: float
+    value_grid: Dict[str, float] = field(default_factory=dict)
+    delta_grid: Dict[str, float] = field(default_factory=dict)
 
 class PricingEngine:
-    def price(self, model: BinomialStockModel, payoff: Payoff) -> Tuple[float, float]:
+    def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
+              position: Literal["short", "long"] = "short") -> PricingResult:
         """
-        Calcula el precio libre de arbitraje en t=0 y la cobertura inicial.
-        Devuelve (V0, Δ0).
-        Ver docs/theory/01_modelo_un_periodo.md -- Eq. (1.1.9) para Δ0, Eq. (1.1.10) para V0.
+        Calcula el precio libre de arbitraje y la cobertura usando inducción hacia atrás.
+        El caso recursivo simétrico completo (incluyendo T) se demuestra en el Ejercicio 1.4.
+        Utiliza Eq. (1.2.18), Eq. (1.2.16) y Eq. (1.2.17)
         """
-        path_h = np.array([model.S0, model.s1_h])
-        path_t = np.array([model.S0, model.s1_t])
-        
-        v1_h = payoff.compute(path_h)
-        v1_t = payoff.compute(path_t)
-        
+        lattice = RecombiningLattice(n_periods)
+        value_grid = {}
+        delta_grid = {}
+
         p_tilde, q_tilde = model.risk_neutral_prob
-        
-        # Cálculo de la cantidad de acciones (delta) en el portafolio replicante
-        # Ver docs/theory/01_modelo_un_periodo.md -- Eq. (1.1.9).
-        delta_0 = (v1_h - v1_t) / (model.s1_h - model.s1_t)
-        
-        # Implementa la fórmula de valoración neutral al riesgo.
-        # Ver docs/theory/01_modelo_un_periodo.md -- Eq. (1.1.10).
-        v_0 = (1 / (1 + model.r)) * (p_tilde * v1_h + q_tilde * v1_t)
-        
-        return v_0, delta_0
+        all_paths = list(lattice.enumerate_paths())
+
+        for seq in all_paths:
+            path_prices = model.price_path(seq)
+            value_grid[seq] = payoff.compute(path_prices)
+
+        for n in range(n_periods - 1, -1, -1):
+            prefixes = set(seq[:n] for seq in all_paths) if n_periods > 0 else {""}
+            
+            for prefix in prefixes:
+                v_next_h = value_grid[prefix + "H"]
+                v_next_t = value_grid[prefix + "T"]
+
+                s_next_h = model.price_path(prefix + "H")[-1]
+                s_next_t = model.price_path(prefix + "T")[-1]
+
+                v_n = (1 / (1 + model.r)) * (p_tilde * v_next_h + q_tilde * v_next_t)
+                value_grid[prefix] = v_n
+
+                delta_n = (v_next_h - v_next_t) / (s_next_h - s_next_t)
+                
+                if position == "long":
+                    delta_n = -delta_n
+                    
+                delta_grid[prefix] = delta_n
+
+        v0 = value_grid.get("", 0.0)
+        delta0 = delta_grid.get("", 0.0)
+
+        return PricingResult(v0=v0, delta0=delta0, value_grid=value_grid, delta_grid=delta_grid)
