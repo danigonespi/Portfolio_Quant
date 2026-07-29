@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 from binomial_pricer.equity_model import BinomialStockModel
-from binomial_pricer.payoffs import EuropeanCall, LookbackOption
-from binomial_pricer.engines import PricingEngine
+from binomial_pricer.payoffs import EuropeanCall, LookbackOption, EuropeanPut
+from binomial_pricer.engines import PricingEngine, ReducedStateEngine
 
 def test_v0_differs_from_naive_real_world_expectation(one_period_model):
     """V0 (bajo p̃,q̃, Eq. 1.1.10) debe diferir de la esperanza descontada
@@ -53,3 +53,37 @@ def test_exercise_1_7_hedging_long_multiple_periods():
     
     for prefix in res_short.delta_grid:
         assert res_long.delta_grid[prefix] == pytest.approx(-res_short.delta_grid[prefix])
+
+def test_cross_validation_reduced_vs_brute_force_one_period(one_period_model):
+    call = EuropeanCall(strike=5.0)
+    res_brute = PricingEngine().price(one_period_model, call, n_periods=1)
+    res_reduced = ReducedStateEngine().price(one_period_model, call, n_periods=1)
+    
+    assert res_reduced.v0 == pytest.approx(res_brute.v0)
+    assert res_reduced.delta0 == pytest.approx(res_brute.delta0)
+
+def test_cross_validation_reduced_vs_brute_force_lookback():
+    model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+    payoff = LookbackOption()
+    res_brute = PricingEngine().price(model, payoff, n_periods=3)
+    res_reduced = ReducedStateEngine().price(model, payoff, n_periods=3)
+    
+    assert res_reduced.v0 == pytest.approx(res_brute.v0)
+    assert res_reduced.delta0 == pytest.approx(res_brute.delta0)
+
+def test_cross_validation_reduced_vs_brute_force_put():
+    model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+    put = EuropeanPut(strike=5.0)
+    res_brute = PricingEngine().price(model, put, n_periods=3)
+    res_reduced = ReducedStateEngine().price(model, put, n_periods=3)
+    
+    assert res_reduced.v0 == pytest.approx(res_brute.v0)
+    assert res_reduced.delta0 == pytest.approx(res_brute.delta0)
+
+def test_reduced_engine_long_position_inverts_delta(one_period_model):
+    call = EuropeanCall(strike=5.0)
+    res_short = ReducedStateEngine().price(one_period_model, call, n_periods=1, position="short")
+    res_long = ReducedStateEngine().price(one_period_model, call, n_periods=1, position="long")
+    
+    # Comprobamos en el nodo raíz de la reducción (0, S0)
+    assert res_long.delta_grid[(0, one_period_model.S0)] == pytest.approx(-res_short.delta_grid[(0, one_period_model.S0)])
