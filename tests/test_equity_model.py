@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from binomial_pricer.equity_model import BinomialStockModel
 
 class TestNoArbitrageValidation:
@@ -50,3 +51,15 @@ class TestStockPrices:
     def test_s1_h_and_s1_t(self, one_period_model):
         assert one_period_model.s1_h == pytest.approx(8.0)
         assert one_period_model.s1_t == pytest.approx(2.0)
+
+class TestPricePath:
+    def test_price_path_hth_example_1_2_4(self):
+        model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+        path = model.price_path("HTH")
+        np.testing.assert_array_almost_equal(path, [4.0, 8.0, 4.0, 8.0])
+
+    def test_price_path_length(self):
+        model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+        seq = "HHTT"
+        path = model.price_path(seq)
+        assert len(path) == len(seq) + 1
