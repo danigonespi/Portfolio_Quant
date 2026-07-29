@@ -1,7 +1,7 @@
 import pytest
 from binomial_pricer.equity_model import BinomialStockModel
-from binomial_pricer.payoffs import EuropeanCall, LookbackOption
-from binomial_pricer.engines import PricingEngine
+from binomial_pricer.payoffs import EuropeanCall, LookbackOption, EuropeanPut
+from binomial_pricer.engines import PricingEngine, ReducedStateEngine
 
 def test_example_1_1_1(one_period_model):
     """Ejemplo 1.1.1: call strike=5 -> V0=1.20, Delta0=0.5."""
@@ -59,3 +59,31 @@ def test_example_1_2_4_lookback_option():
     # V0 y Delta0
     assert result.v0 == pytest.approx(1.376)
     assert result.delta0 == pytest.approx(0.1733, abs=1e-3)
+
+def test_example_1_3_1_put_state_reduction():
+    """Valores dorados exactos del Ejemplo 1.3.1 usando reducción de estados v_n(s)."""
+    model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+    payoff = EuropeanPut(strike=5.0)
+    result = ReducedStateEngine().price(model, payoff, n_periods=3)
+
+    assert result.value_grid[(3, 32.0)] == pytest.approx(0.0)
+    assert result.value_grid[(3, 8.0)] == pytest.approx(0.0)
+    assert result.value_grid[(3, 2.0)] == pytest.approx(3.0)
+    assert result.value_grid[(3, 0.5)] == pytest.approx(4.50)
+
+    assert result.value_grid[(0, 4.0)] == pytest.approx(0.864)
+
+def test_example_1_3_2_lookback_state_reduction():
+    """Valores dorados exactos del Ejemplo 1.3.2 usando reducción de estados v_n(s, m)."""
+    model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+    payoff = LookbackOption()
+    result = ReducedStateEngine().price(model, payoff, n_periods=3)
+
+    assert result.value_grid[(3, 32.0, 32.0)] == pytest.approx(0.0)
+    assert result.value_grid[(3, 8.0, 16.0)] == pytest.approx(8.0)
+    assert result.value_grid[(3, 8.0, 8.0)] == pytest.approx(0.0)
+    assert result.value_grid[(3, 2.0, 8.0)] == pytest.approx(6.0)
+    assert result.value_grid[(3, 2.0, 4.0)] == pytest.approx(2.0)
+    assert result.value_grid[(3, 0.5, 4.0)] == pytest.approx(3.50)
+
+    assert result.value_grid[(0, 4.0, 4.0)] == pytest.approx(1.376)

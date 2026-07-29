@@ -1,16 +1,16 @@
 import numpy as np
-from typing import Dict, Literal
+from typing import Dict, Literal, Any
 from dataclasses import dataclass, field
 from .equity_model import BinomialStockModel
-from .payoffs import Payoff
+from .payoffs import Payoff, PathDependentPayoff
 from .lattice import RecombiningLattice
 
 @dataclass
 class PricingResult:
     v0: float
     delta0: float
-    value_grid: Dict[str, float] = field(default_factory=dict)
-    delta_grid: Dict[str, float] = field(default_factory=dict)
+    value_grid: Dict[Any, float] = field(default_factory=dict)
+    delta_grid: Dict[Any, float] = field(default_factory=dict)
 
 class PricingEngine:
     def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
@@ -55,3 +55,81 @@ class PricingEngine:
         delta0 = delta_grid.get("", 0.0)
 
         return PricingResult(v0=v0, delta0=delta0, value_grid=value_grid, delta_grid=delta_grid)
+
+class ReducedStateEngine:
+    def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
+              position: Literal["short", "long"] = "short") -> PricingResult:
+        """
+        Calcula el precio libre de arbitraje y la cobertura mediante la reducción
+        del espacio de estados (Sección 1.3).
+        
+        Aplica la Eq. (1.3.1) para la recursión del valor neutral al riesgo,
+        generalizada mediante las fórmulas algorítmicas canónicas sin numerar
+        para v_n(s) y Delta_n(s) (opciones independientes de trayectoria), 
+        y v_n(s, m) y Delta_n(s, m) (opciones dependientes de trayectoria).
+        """
+        value_grid = {}
+        delta_grid = {}
+        p_tilde, q_tilde = model.risk_neutral_prob
+
+        if isinstance(payoff, PathDependentPayoff):
+            lattice = RecombiningLattice(n_periods)
+            states_by_level = {n: set() for n in range(n_periods + 1)}
+            
+            for seq in lattice.enumerate_paths():
+                s = model.S0
+                m = payoff.initial_aggregate(s)
+                states_by_level[0].add((s, m))
+                for n, coin in enumerate(seq):
+                    s = s * model.u if coin == 'H' else s * model.d
+                    m = payoff.update_aggregate(m, s)
+                    states_by_level[n + 1].add((s, m))
+            
+            for s, m in states_by_level[n_periods]:
+                value_grid[(n_periods, s, m)] = payoff.terminal_value(s, m)
+                
+            for n in range(n_periods - 1, -1, -1):
+                for s, m in states_by_level[n]:
+                    s_up = s * model.u
+                    m_up = payoff.update_aggregate(m, s_up)
+                    s_down = s * model.d
+                    m_down = payoff.update_aggregate(m, s_down)
+                    
+                    v_n = (1 / (1 + model.r)) * (p_tilde * value_grid[(n+1, s_up, m_up)] + q_tilde * value_grid[(n+1, s_down, m_down)])
+                    value_grid[(n, s, m)] = v_n
+                    
+                    delta_n = (value_grid[(n+1, s_up, m_up)] - value_grid[(n+1, s_down, m_down)]) / ((model.u - model.d) * s)
+                    
+                    if position == "long":
+                        delta_n = -delta_n
+                        
+                    delta_grid[(n, s, m)] = delta_n
+                    
+            v0 = value_grid.get((0, model.S0, payoff.initial_aggregate(model.S0)), 0.0)
+            delta0 = delta_grid.get((0, model.S0, payoff.initial_aggregate(model.S0)), 0.0)
+            
+        else:
+            for k in range(n_periods + 1):
+                s = model.price_path("H" * k + "T" * (n_periods - k))[-1]
+                value_grid[(n_periods, s)] = payoff.compute(np.array([s]))
+                
+            for n in range(n_periods - 1, -1, -1):
+                for k in range(n + 1):
+                    s = model.price_path("H" * k + "T" * (n - k))[-1]
+                    s_up = model.price_path("H" * (k + 1) + "T" * (n - k))[-1]
+                    s_down = model.price_path("H" * k + "T" * (n - k + 1))[-1]
+                    
+                    v_n = (1 / (1 + model.r)) * (p_tilde * value_grid[(n+1, s_up)] + q_tilde * value_grid[(n+1, s_down)])
+                    value_grid[(n, s)] = v_n
+                    
+                    delta_n = (value_grid[(n+1, s_up)] - value_grid[(n+1, s_down)]) / ((model.u - model.d) * s)
+                    
+                    if position == "long":
+                        delta_n = -delta_n
+                        
+                    delta_grid[(n, s)] = delta_n
+                    
+            v0 = value_grid.get((0, model.S0), 0.0)
+            delta0 = delta_grid.get((0, model.S0), 0.0)
+
+        return PricingResult(v0=v0, delta0=delta0, value_grid=value_grid, delta_grid=delta_grid)        
