@@ -1,11 +1,11 @@
 import numpy as np
-from typing import Dict, Literal, Any, Tuple, Union, TypeAlias
+from typing import Dict, Literal, Any, Tuple, Union
 from dataclasses import dataclass, field
 from .equity_model import BinomialStockModel
-from .payoffs import Payoff, PathDependentPayoff
+from .payoffs import Payoff
 from .lattice import RecombiningLattice
 
-StateKey: TypeAlias = Union[Tuple[int, float], Tuple[int, float, Any]]
+StateKey = Union[Tuple[int, float], Tuple[int, float, Any]]
 
 @dataclass
 class PricingResult:
@@ -60,20 +60,6 @@ class PricingEngine:
         return PricingResult(v0=v0, delta0=delta0, value_grid=value_grid, delta_grid=delta_grid)
 
 class ReducedStateEngine:
-    @staticmethod
-    def _combine_backward(v_up: float, v_down: float, s: float, model: BinomialStockModel,
-                           p_tilde: float, q_tilde: float, position: str):
-        """Un paso de inducción hacia atrás sobre estado reducido: aplica la
-        fórmula de v_n (Eq. 1.3.1 generalizada) y de Delta_n (fórmula
-        canónica sin numerar, Sección 1.3). Compartido por ambas ramas de
-        price() -- solo cambia cómo se construye la clave del estado,
-        nunca la fórmula en sí."""
-        v_n = (1 / (1 + model.r)) * (p_tilde * v_up + q_tilde * v_down)
-        delta_n = (v_up - v_down) / ((model.u - model.d) * s)
-        if position == "long":
-            delta_n = -delta_n
-        return v_n, delta_n
-    
     def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
               position: Literal["short", "long"] = "short") -> PricingResult:
         """
