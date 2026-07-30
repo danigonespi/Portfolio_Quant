@@ -9,6 +9,12 @@ class RecombiningLattice:
         """
         En un árbol binomial recombinante estándar, el número de nodos
         en el paso n es n + 1.
+
+        No usado todavía en el capítulo 1 -- se conserva a propósito
+        como utilidad de la estructura combinatoria pura, pensando en
+        el Capítulo 6 (activos dependientes de tipos de interés), donde
+        se necesitará la forma del árbol independientemente del
+        proceso estocástico que lo recorra.
         """
         return step + 1
 
