@@ -1,8 +1,19 @@
 from abc import ABC, abstractmethod
 import numpy as np
+from typing import Any
 
 
 class Payoff(ABC):
+    def initial_aggregate(self, s0: float) -> Any:
+        return None
+        
+    def update_aggregate(self, aggregate: Any, s_next: float) -> Any:
+        return None
+        
+    def terminal_value(self, s_final: float, aggregate_final: Any) -> float:
+        """Por defecto, los payoffs sin estado evalúan solo el último precio."""
+        return self.compute(np.array([s_final]))
+        
     @abstractmethod
     def compute(self, path: np.ndarray) -> float:
         """

@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
+import time
 from binomial_pricer.equity_model import BinomialStockModel
-from binomial_pricer.payoffs import EuropeanCall, LookbackOption, EuropeanPut
+from binomial_pricer.payoffs import EuropeanCall, LookbackOption, EuropeanPut, AsianOption
 from binomial_pricer.engines import PricingEngine, ReducedStateEngine
 
 def test_v0_differs_from_naive_real_world_expectation(one_period_model):
@@ -87,3 +88,21 @@ def test_reduced_engine_long_position_inverts_delta(one_period_model):
     
     # Comprobamos en el nodo raíz de la reducción (0, S0)
     assert res_long.delta_grid[(0, one_period_model.S0)] == pytest.approx(-res_short.delta_grid[(0, one_period_model.S0)])
+
+# DESPUÉS:
+def test_reduced_engine_computational_complexity_n50():
+    """
+    Verifica empíricamente que la complejidad es verdaderamente reducida (polinómica).
+    Se usa LookbackOption porque sus estados (s, max) sí recombinan. 
+    (Nota: Una opción Asiática Aritmética no recombina y generaría O(2^N) estados).
+    """
+    model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+    payoff = LookbackOption()
+    
+    start_time = time.time()
+    result = ReducedStateEngine().price(model, payoff, n_periods=50)
+    elapsed = time.time() - start_time
+    
+    assert elapsed < 1.0, f"Fallo de arquitectura: el motor tardó {elapsed}s. Hay una fuga exponencial."
+    
+    assert result.v0 > 0.0
