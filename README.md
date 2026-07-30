@@ -8,8 +8,8 @@ El motor de valoración base está completo y validado, cubriendo los fundamento
 
 *   **Arquitectura Desacoplada:** Separación estricta entre la dinámica del activo subyacente (`equity_model.py`), la definición de los pagos (`payoffs.py`) y la lógica de resolución algorítmica (`engines.py`).
 *   **Polimorfismo de Payoffs:** Interfaz unificada que soporta tanto opciones estándar (Europeas) como opciones dependientes de la trayectoria (ej. Lookback Options) sin romper los principios SOLID.
-*   **Optimización Algorítmica (State Reduction):** Implementación de un `ReducedStateEngine` que colapsa trayectorias recombinantes. Esto reduce la complejidad espacial y temporal de $O(2^N)$ a un tiempo polinómico $O(N^2)$, permitiendo valorar árboles de $N=50$ o superior en fracciones de segundo.
-*   **Validación de Estrés:** Batería de pruebas exhaustiva (`pytest`) que asegura la ausencia de fugas exponenciales en la memoria y garantiza la fidelidad matemática frente a los ejemplos teóricos ("Golden Examples").
+*   **Optimización Algorítmica (State Reduction):** Implementación de un `ReducedStateEngine` que colapsa trayectorias recombinantes. Para derivados no dependientes de la trayectoria (call, put), esto reduce la complejidad e de $O(2^N)$ a $O(N^2)$; para derivados dependientes de la trayectoria como la lookback, la reducción de estado a $(S_n, M_n)$ sigue siendo polinómica $(O(N^3))$ frente a la enumeración exhaustiva, permitiendo valorar árboles de $N=50$ en fracciones de segundo.
+*   **Validación de Estrés:** Batería de pruebas exhaustiva (`pytest`) que asegura la ausencia de fugas exponenciales en tiempo de cómputo y garantiza la fidelidad matemática frente a los ejemplos teóricos ("Golden Examples").
 
 ## Estructura del Repositorio
 
@@ -22,7 +22,7 @@ La base de código está organizada para separar claramente la teoría matemáti
 
 ## Requisitos y Uso
 
-El proyecto utiliza Python 3.10+ y aprovecha el tipado estricto (Type Hints). 
+El proyecto utiliza Python 3.9+ y aprovecha el tipado estricto (Type Hints). 
 
 Para ejecutar la suite de validación matemática y computacional:
 
