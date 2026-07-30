@@ -13,6 +13,7 @@ class Payoff(ABC):
         """
         pass
 
+
 class PathDependentPayoff(Payoff, ABC):
     """Payoff reducible a un estado (S_n, agregado_n). compute()
     se implementa una sola vez aquí a partir de tres hooks, para
@@ -36,18 +37,6 @@ class PathDependentPayoff(Payoff, ABC):
         for s in path[1:]:
             agg = self.update_aggregate(agg, s)
         return self.terminal_value(path[-1], agg)
-
-class LookbackOption(PathDependentPayoff):
-    """Payoff M_N - S_N, M_n = max(S_0..S_n). Ejemplo 1.2.4."""
-    
-    def initial_aggregate(self, s0: float) -> float:
-        return s0
-
-    def update_aggregate(self, aggregate: float, s_next: float) -> float:
-        return max(aggregate, s_next)
-
-    def terminal_value(self, s_final: float, aggregate_final: float) -> float:
-        return aggregate_final - s_final
 
 
 class EuropeanCall(Payoff):
@@ -75,3 +64,34 @@ class Forward(Payoff):
     def compute(self, path: np.ndarray) -> float:
         """Pago de un contrato forward: S_N - K."""
         return path[-1] - self.delivery_price
+
+
+class LookbackOption(PathDependentPayoff):
+    """Payoff M_N - S_N, M_n = max(S_0..S_n). Ejemplo 1.2.4."""
+    
+    def initial_aggregate(self, s0: float) -> float:
+        return s0
+
+    def update_aggregate(self, aggregate: float, s_next: float) -> float:
+        return max(aggregate, s_next)
+
+    def terminal_value(self, s_final: float, aggregate_final: float) -> float:
+        return aggregate_final - s_final
+
+
+class AsianOption(PathDependentPayoff):
+    """Payoff max(Y_N/(N+1) - K, 0), Y_n = suma corriente S_0..S_n.
+    Ejercicio 1.8. Ver docs/theory/04_opcion_asiatica.md."""
+
+    def __init__(self, strike: float, n_periods: int):
+        self.strike = strike
+        self.n_periods = n_periods
+
+    def initial_aggregate(self, s0: float) -> float:
+        return s0
+
+    def update_aggregate(self, aggregate: float, s_next: float) -> float:
+        return aggregate + s_next
+
+    def terminal_value(self, s_final: float, aggregate_final: float) -> float:
+        return max(aggregate_final / (self.n_periods + 1) - self.strike, 0.0)
