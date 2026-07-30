@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from binomial_pricer.payoffs import Payoff, EuropeanCall, EuropeanPut, Forward, LookbackOption, PathDependentPayoff
+from binomial_pricer.payoffs import Payoff, EuropeanCall, EuropeanPut, Forward, LookbackOption, PathDependentPayoff, AsianOption
 
 def test_payoff_abc_cannot_be_instantiated_directly():
     with pytest.raises(TypeError):
@@ -54,3 +54,10 @@ class TestPathDependentPayoffHooks:
         assert getattr(dummy, "update_called", False)
         assert getattr(dummy, "terminal_called", False)
         assert res == 15.0  # (2.0 + 3.0) * 3.0 = 15.0
+
+class TestAsianOption:
+    def test_compute_manual_path_hth(self):
+        """Trayectoria manual HTH aislada: S=[4, 8, 4, 8], Y_3=24. Payoff = max(24/4 - 4, 0) = 2.0."""
+        payoff = AsianOption(strike=4.0, n_periods=3)
+        path = np.array([4.0, 8.0, 4.0, 8.0])
+        assert payoff.compute(path) == 2.0

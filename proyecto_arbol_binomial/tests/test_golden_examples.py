@@ -1,6 +1,6 @@
 import pytest
 from binomial_pricer.equity_model import BinomialStockModel
-from binomial_pricer.payoffs import EuropeanCall, LookbackOption, EuropeanPut
+from binomial_pricer.payoffs import EuropeanCall, LookbackOption, EuropeanPut, AsianOption
 from binomial_pricer.engines import PricingEngine, ReducedStateEngine
 
 def test_example_1_1_1(one_period_model):
@@ -85,5 +85,20 @@ def test_example_1_3_2_lookback_state_reduction():
     assert result.value_grid[(3, 2.0, 8.0)] == pytest.approx(6.0)
     assert result.value_grid[(3, 2.0, 4.0)] == pytest.approx(2.0)
     assert result.value_grid[(3, 0.5, 4.0)] == pytest.approx(3.50)
-
     assert result.value_grid[(0, 4.0, 4.0)] == pytest.approx(1.376)
+
+def test_exercise_1_8_asian_option_state_reduction():
+    """Valores dorados exactos del Ejercicio 1.8 (Asian option).
+    Valida que tanto el motor de fuerza bruta como el de reducción de estados
+    convergen al mismo V0 de 1.216 usando un agregado de suma corriente."""
+    model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+    payoff = AsianOption(strike=4.0, n_periods=3)
+    
+    res_brute = PricingEngine().price(model, payoff, n_periods=3)
+    res_reduced = ReducedStateEngine().price(model, payoff, n_periods=3)
+    
+    expected_v0 = 1.216
+    
+    assert res_brute.v0 == pytest.approx(expected_v0)
+    assert res_reduced.v0 == pytest.approx(expected_v0)
+    assert res_reduced.delta0 == pytest.approx(res_brute.delta0)
