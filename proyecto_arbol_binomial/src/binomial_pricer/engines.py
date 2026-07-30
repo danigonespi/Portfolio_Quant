@@ -57,6 +57,20 @@ class PricingEngine:
         return PricingResult(v0=v0, delta0=delta0, value_grid=value_grid, delta_grid=delta_grid)
 
 class ReducedStateEngine:
+    @staticmethod
+    def _combine_backward(v_up: float, v_down: float, s: float, model: BinomialStockModel,
+                           p_tilde: float, q_tilde: float, position: str):
+        """Un paso de inducción hacia atrás sobre estado reducido: aplica la
+        fórmula de v_n (Eq. 1.3.1 generalizada) y de Delta_n (fórmula
+        canónica sin numerar, Sección 1.3). Compartido por ambas ramas de
+        price() -- solo cambia cómo se construye la clave del estado,
+        nunca la fórmula en sí."""
+        v_n = (1 / (1 + model.r)) * (p_tilde * v_up + q_tilde * v_down)
+        delta_n = (v_up - v_down) / ((model.u - model.d) * s)
+        if position == "long":
+            delta_n = -delta_n
+        return v_n, delta_n
+    
     def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
               position: Literal["short", "long"] = "short") -> PricingResult:
         """
@@ -95,14 +109,8 @@ class ReducedStateEngine:
                     s_down = s * model.d
                     m_down = payoff.update_aggregate(m, s_down)
                     
-                    v_n = (1 / (1 + model.r)) * (p_tilde * value_grid[(n+1, s_up, m_up)] + q_tilde * value_grid[(n+1, s_down, m_down)])
+                    v_n, delta_n = self._combine_backward(value_grid[(n+1, s_up, m_up)], value_grid[(n+1, s_down, m_down)],s, model, p_tilde, q_tilde, position)
                     value_grid[(n, s, m)] = v_n
-                    
-                    delta_n = (value_grid[(n+1, s_up, m_up)] - value_grid[(n+1, s_down, m_down)]) / ((model.u - model.d) * s)
-                    
-                    if position == "long":
-                        delta_n = -delta_n
-                        
                     delta_grid[(n, s, m)] = delta_n
                     
             v0 = value_grid.get((0, model.S0, payoff.initial_aggregate(model.S0)), 0.0)
@@ -119,14 +127,8 @@ class ReducedStateEngine:
                     s_up = model.price_path("H" * (k + 1) + "T" * (n - k))[-1]
                     s_down = model.price_path("H" * k + "T" * (n - k + 1))[-1]
                     
-                    v_n = (1 / (1 + model.r)) * (p_tilde * value_grid[(n+1, s_up)] + q_tilde * value_grid[(n+1, s_down)])
+                    v_n, delta_n = self._combine_backward(value_grid[(n+1, s_up)], value_grid[(n+1, s_down)], s, model, p_tilde, q_tilde, position)
                     value_grid[(n, s)] = v_n
-                    
-                    delta_n = (value_grid[(n+1, s_up)] - value_grid[(n+1, s_down)]) / ((model.u - model.d) * s)
-                    
-                    if position == "long":
-                        delta_n = -delta_n
-                        
                     delta_grid[(n, s)] = delta_n
                     
             v0 = value_grid.get((0, model.S0), 0.0)

@@ -8,17 +8,19 @@ class Payoff(ABC):
         """
         Calcula el pago (payoff) del derivado.
         Aunque en el modelo de un período solo se evalúa el último precio,
-        la firma requiere la trayectoria completa [S0, ..., Sn] para
-        mantener la interfaz compatible con opciones path-dependent en el futuro.
+        la firma requiere la trayectoria completa [S0, ..., Sn] para mantener 
+        la interfaz compatible con opciones path-dependent (ver PathDependentPayoff).
         """
         pass
 
 
 class PathDependentPayoff(Payoff, ABC):
-    """Payoff reducible a un estado (S_n, agregado_n). compute()
-    se implementa una sola vez aquí a partir de tres hooks, para
-    que una versión 'rápida' futura (Sección 1.3) nunca pueda
-    divergir silenciosamente de esta versión de referencia."""
+    """
+    Payoff reducible a un estado (S_n, agregado_n). compute()
+    se implementa una sola vez aquí a partir de tres hooks, para que 
+    ReducedStateEngine (Sección 1.3) nunca pueda divergir silenciosamente de esta
+    versión de referencia -- ver test_cross_validation_* en test_engines.py.
+    """
 
     @abstractmethod
     def initial_aggregate(self, s0: float) -> float:
