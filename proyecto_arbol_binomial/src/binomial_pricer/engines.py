@@ -59,6 +59,7 @@ class PricingEngine:
 
         return PricingResult(v0=v0, delta0=delta0, value_grid=value_grid, delta_grid=delta_grid)
 
+
 class ReducedStateEngine:
     def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
               position: Literal["short", "long"] = "short") -> PricingResult:
@@ -75,39 +76,53 @@ class ReducedStateEngine:
         delta_grid = {}
         p_tilde, q_tilde = model.risk_neutral_prob
 
-        # Tubería algorítmica universal (Opciones estándar y Path-Dependent)
+        u_powers = [1.0] * (n_periods + 2)
+        d_powers = [1.0] * (n_periods + 2)
+        for i in range(1, n_periods + 2):
+            u_powers[i] = u_powers[i-1] * model.u
+            d_powers[i] = d_powers[i-1] * model.d
+            
+        def get_s(j: int, n_step: int) -> float:
+            return model.S0 * u_powers[j] * d_powers[n_step - j]
+
         states_by_level = {n: set() for n in range(n_periods + 1)}
         
-        s0 = model.S0
-        m0 = payoff.initial_aggregate(s0)
-        states_by_level[0].add((s0, m0))
+        m0 = payoff.initial_aggregate(model.S0)
+        states_by_level[0].add((0, m0)) 
         
         for n in range(n_periods):
-            for s, m in states_by_level[n]:
-                s_up = s * model.u
+            for j, m in states_by_level[n]:
+                s_up = get_s(j + 1, n + 1)
                 m_up = payoff.update_aggregate(m, s_up)
-                states_by_level[n + 1].add((s_up, m_up))
+                states_by_level[n + 1].add((j + 1, m_up))
                 
-                s_down = s * model.d
+                s_down = get_s(j, n + 1)
                 m_down = payoff.update_aggregate(m, s_down)
-                states_by_level[n + 1].add((s_down, m_down))
+                states_by_level[n + 1].add((j, m_down))
                 
-        for s, m in states_by_level[n_periods]:
+        for j, m in states_by_level[n_periods]:
+            s = get_s(j, n_periods)
             state_key = (n_periods, s) if m is None else (n_periods, s, m)
             value_grid[state_key] = payoff.terminal_value(s, m)
             
+        discount = 1 / (1 + model.r)
+        
         for n in range(n_periods - 1, -1, -1):
-            for s, m in states_by_level[n]:
-                s_up = s * model.u
+            for j, m in states_by_level[n]:
+                s = get_s(j, n)
+                
+                s_up = get_s(j + 1, n + 1)
+                s_down = get_s(j, n + 1)
+                
                 m_up = payoff.update_aggregate(m, s_up)
-                s_down = s * model.d
                 m_down = payoff.update_aggregate(m, s_down)
                 
                 key_up = (n+1, s_up) if m_up is None else (n+1, s_up, m_up)
                 key_down = (n+1, s_down) if m_down is None else (n+1, s_down, m_down)
                 
-                v_n = (1 / (1 + model.r)) * (p_tilde * value_grid[key_up] + q_tilde * value_grid[key_down])
-                delta_n = (value_grid[key_up] - value_grid[key_down]) / ((model.u - model.d) * s)
+                v_n = discount * (p_tilde * value_grid[key_up] + q_tilde * value_grid[key_down])
+                
+                delta_n = (value_grid[key_up] - value_grid[key_down]) / (s_up - s_down)
                 
                 if position == "long":
                     delta_n = -delta_n
@@ -116,7 +131,7 @@ class ReducedStateEngine:
                 value_grid[state_key] = v_n
                 delta_grid[state_key] = delta_n
                 
-        key0 = (0, s0) if m0 is None else (0, s0, m0)
+        key0 = (0, model.S0) if m0 is None else (0, model.S0, m0)
         v0 = value_grid.get(key0, 0.0)
         delta0 = delta_grid.get(key0, 0.0)
         
