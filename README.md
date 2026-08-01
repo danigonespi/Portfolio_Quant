@@ -22,7 +22,7 @@ La base de código está organizada para separar claramente la teoría matemáti
 
 ## Requisitos y Uso
 
-El proyecto utiliza Python 3.9+ y aprovecha el tipado estricto (Type Hints). 
+El proyecto utiliza Python 3.10+ y aprovecha el tipado estricto (Type Hints). 
 
 Para ejecutar la suite de validación matemática y computacional:
 

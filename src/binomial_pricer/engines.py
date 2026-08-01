@@ -1,18 +1,19 @@
 import numpy as np
-from typing import Dict, Literal, Any, Tuple, Union
+from typing import Literal, Any
 from dataclasses import dataclass, field
+
 from .equity_model import BinomialStockModel
-from .payoffs import Payoff
+from .payoffs import Payoff, PathDependentPayoff
 from .lattice import RecombiningLattice
 
-StateKey = Union[Tuple[int, float], Tuple[int, float, Any]]
+StateKey = tuple[int, float] | tuple[int, float, Any] | str
 
 @dataclass
 class PricingResult:
     v0: float
     delta0: float
-    value_grid: Dict[StateKey, float] = field(default_factory=dict)
-    delta_grid: Dict[StateKey, float] = field(default_factory=dict)
+    value_grid: dict[StateKey, float] = field(default_factory=dict)
+    delta_grid: dict[StateKey, float] = field(default_factory=dict)
 
 class PricingEngine:
     def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
@@ -33,6 +34,8 @@ class PricingEngine:
             path_prices = model.price_path(seq)
             value_grid[seq] = payoff.compute(path_prices)
 
+        discount = 1 / (1 + model.r)
+
         for n in range(n_periods - 1, -1, -1):
             prefixes = set(seq[:n] for seq in all_paths) if n_periods > 0 else {""}
             
@@ -44,7 +47,7 @@ class PricingEngine:
                 s_next_h = current_s * model.u
                 s_next_t = current_s * model.d
 
-                v_n = (1 / (1 + model.r)) * (p_tilde * v_next_h + q_tilde * v_next_t)
+                v_n = discount * (p_tilde * v_next_h + q_tilde * v_next_t)
                 value_grid[prefix] = v_n
 
                 delta_n = (v_next_h - v_next_t) / (s_next_h - s_next_t)

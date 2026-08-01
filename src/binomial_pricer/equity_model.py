@@ -1,6 +1,5 @@
 import numpy as np
 from dataclasses import dataclass
-from typing import Tuple
 
 @dataclass(frozen=True)
 class BinomialStockModel:
@@ -9,7 +8,7 @@ class BinomialStockModel:
     d: float
     r: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
         Valida la condición de ausencia de arbitraje.
         Ver docs/theory/01_modelo_un_periodo.md -- Eq. (1.1.2).
@@ -27,7 +26,7 @@ class BinomialStockModel:
             raise ValueError(f"Condición de arbitraje violada: 1+r ({1+self.r}) >= u ({self.u}). ")
 
     @property
-    def risk_neutral_prob(self) -> Tuple[float, float]:
+    def risk_neutral_prob(self) -> tuple[float, float]:
         """
         Calcula las probabilidades neutrales al riesgo (p̃, q̃).
         Ver docs/theory/01_modelo_un_periodo.md -- Eq. (1.1.8) y Eq. (1.2.15).
