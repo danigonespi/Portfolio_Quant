@@ -28,38 +28,36 @@ class TestNoArbitrageValidation:
 
 
 class TestImmutability:
-    def test_model_cannot_be_mutated_after_construction(self, one_period_model):
+    def test_model_cannot_be_mutated_after_construction(self, base_model):
         """Sin frozen=True, la validación de __post_init__ se puede saltar
         reasignando un atributo después de construir el objeto -- ver revisión."""
         with pytest.raises(Exception):
-            one_period_model.u = 1.0
+            base_model.u = 1.0
 
 
 class TestRiskNeutralProbability:
-    def test_matches_example_1_1_1(self, one_period_model):
-        p_tilde, q_tilde = one_period_model.risk_neutral_prob
+    def test_matches_example_1_1_1(self, base_model):
+        p_tilde, q_tilde = base_model.risk_neutral_prob
         assert p_tilde == pytest.approx(0.5)
         assert q_tilde == pytest.approx(0.5)
 
-    def test_p_and_q_always_sum_to_one(self, one_period_model):
+    def test_p_and_q_always_sum_to_one(self, base_model):
         """Identidad algebraica de (1.1.8): p̃+q̃=1 para cualquier u,d,r válidos."""
-        p_tilde, q_tilde = one_period_model.risk_neutral_prob
+        p_tilde, q_tilde = base_model.risk_neutral_prob
         assert p_tilde + q_tilde == pytest.approx(1.0)
 
 
 class TestStockPrices:
-    def test_s1_h_and_s1_t(self, one_period_model):
-        assert one_period_model.s1_h == pytest.approx(8.0)
-        assert one_period_model.s1_t == pytest.approx(2.0)
+    def test_s1_h_and_s1_t(self, base_model):
+        assert base_model.s1_h == pytest.approx(8.0)
+        assert base_model.s1_t == pytest.approx(2.0)
 
 class TestPricePath:
-    def test_price_path_hth_example_1_2_4(self):
-        model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
-        path = model.price_path("HTH")
+    def test_price_path_hth_example_1_2_4(self, base_model):
+        path = base_model.price_path("HTH")
         np.testing.assert_array_almost_equal(path, [4.0, 8.0, 4.0, 8.0])
 
-    def test_price_path_length(self):
-        model = BinomialStockModel(S0=4.0, u=2.0, d=0.5, r=0.25)
+    def test_price_path_length(self, base_model):
         seq = "HHTT"
-        path = model.price_path(seq)
+        path = base_model.price_path(seq)
         assert len(path) == len(seq) + 1
