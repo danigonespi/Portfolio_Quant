@@ -53,7 +53,7 @@ class PathDependentPayoff(Payoff, ABC):
 
 
 class EuropeanCall(Payoff):
-    def __init__(self, strike: float):
+    def __init__(self, strike: float) -> None:
         self.strike = strike
 
     def compute(self, path: np.ndarray) -> float:
@@ -62,7 +62,7 @@ class EuropeanCall(Payoff):
 
 
 class EuropeanPut(Payoff):
-    def __init__(self, strike: float):
+    def __init__(self, strike: float) -> None:
         self.strike = strike
 
     def compute(self, path: np.ndarray) -> float:
@@ -71,7 +71,7 @@ class EuropeanPut(Payoff):
 
 
 class Forward(Payoff):
-    def __init__(self, delivery_price: float):
+    def __init__(self, delivery_price: float) -> None:
         self.delivery_price = delivery_price
 
     def compute(self, path: np.ndarray) -> float:
@@ -96,7 +96,7 @@ class AsianOption(PathDependentPayoff):
     """Payoff max(Y_N/(N+1) - K, 0), Y_n = suma corriente S_0..S_n.
     Ejercicio 1.8. Ver docs/theory/04_opcion_asiatica.md."""
 
-    def __init__(self, strike: float, n_periods: int):
+    def __init__(self, strike: float, n_periods: int) -> None:
         self.strike = strike
         self.n_periods = n_periods
 

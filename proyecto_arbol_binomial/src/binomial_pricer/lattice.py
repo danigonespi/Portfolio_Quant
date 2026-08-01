@@ -1,5 +1,5 @@
 import itertools
-from typing import Iterator
+from collections.abc import Iterator
 
 class RecombiningLattice:
     def __init__(self, n_periods: int):
@@ -19,10 +19,12 @@ class RecombiningLattice:
         return step + 1
 
     def enumerate_paths(self) -> Iterator[str]:
-        """Genera las 2**n_periods secuencias 'HHH...', 'HHT...', etc.
-        Es el mecanismo de cálculo real de este batch (no un oráculo
-        futuro): al no tener aún la reducción de estado de la Sección
-        1.3, el motor recorre estas secuencias completas."""
+        """
+        Genera las 2**n_periods secuencias 'HHH...', 'HHT...', etc.
+        Es el mecanismo de cálculo real de este batch al no tener aún l
+        a reducción de estado de la Sección1.3, el motor recorre 
+        estas secuencias completas.
+        """
         if self.n_periods == 0:
             yield ""
             return
