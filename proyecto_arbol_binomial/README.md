@@ -18,7 +18,7 @@ La base de código está organizada para separar claramente la teoría matemáti
 *   **`docs/theory/`**: Notas teóricas en formato Markdown detallando el modelo de un periodo, multiperiodo, la reducción computacional y las particularidades de las opciones asiáticas.
 *   **`src/binomial_pricer/`**: Código fuente principal. Contiene las clases del modelo, el generador del árbol (`lattice.py`), y los motores de valoración (`engines.py`).
 *   **`tests/`**: Suite de pruebas unitarias y de integración para validar la correcta instanciación de modelos, evaluación de payoffs y eficiencia algorítmica de los motores.
-*   **`analisis_convergencia.ipynb`**: Cuaderno Jupyter destinado al análisis empírico y visualización de la convergencia del árbol binomial hacia modelos de tiempo continuo (ej. Black-Scholes).
+*   **`shreve_v1_cuaderno.ipynb`**: Cuaderno Jupyter destinado al análisis y la utilización del modelo.
 
 ## Requisitos y Uso
 
