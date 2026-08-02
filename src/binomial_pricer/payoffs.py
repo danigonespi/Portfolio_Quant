@@ -11,28 +11,28 @@ class Payoff(ABC):
         return None
         
     def terminal_value(self, s_final: float, aggregate_final: Any) -> float:
-        """Por defecto, los payoffs sin estado evalúan solo el último precio."""
+        """By default, stateless payoffs evaluate only the final price."""
         return self.compute(np.array([s_final]))
         
     @abstractmethod
     def compute(self, path: np.ndarray) -> float:
         """
-        Calcula el pago (payoff) del derivado.
-        Aunque en el modelo de un período solo se evalúa el último precio,
-        la firma requiere la trayectoria completa [S0, ..., Sn] para mantener 
-        la interfaz compatible con opciones path-dependent (ver PathDependentPayoff).
+        Calculates the derivative payoff.
+        Although in the one-period model only the final price is evaluated,
+        the signature requires the complete path [S0, ..., Sn] to keep
+        the interface compatible with path-dependent options (see PathDependentPayoff).
         """
         pass
 
 
 class PathDependentPayoff(Payoff, ABC):
     """
-    Payoff reducible a un estado (S_n, agregado_n). compute()
-    se implementa una sola vez aquí a partir de tres hooks, para que 
-    ReducedStateEngine (Sección 1.3) nunca pueda divergir silenciosamente de esta
-    versión de referencia -- ver test_cross_validation_* en test_engines.py.
+    Payoff reducible to a state (S_n, aggregate_n). compute()
+    is implemented only once here from three hooks, so that
+    ReducedStateEngine (Section 1.3) can never silently diverge from this
+    reference version -- see test_cross_validation_* in test_engines.py.
     """
-
+    
     @abstractmethod
     def initial_aggregate(self, s0: float) -> float:
         pass
@@ -57,7 +57,7 @@ class EuropeanCall(Payoff):
         self.strike = strike
 
     def compute(self, path: np.ndarray) -> float:
-        """Pago de una opción call europea: max(S_N - K, 0)."""
+        """European call option payoff: max(S_N - K, 0)."""
         return max(path[-1] - self.strike, 0.0)
 
 
@@ -66,7 +66,7 @@ class EuropeanPut(Payoff):
         self.strike = strike
 
     def compute(self, path: np.ndarray) -> float:
-        """Pago de una opción put europea: max(K - S_N, 0)."""
+        """European put option payoff: max(K - S_N, 0)."""
         return max(self.strike - path[-1], 0.0)
 
 
@@ -75,7 +75,7 @@ class Forward(Payoff):
         self.delivery_price = delivery_price
 
     def compute(self, path: np.ndarray) -> float:
-        """Pago de un contrato forward: S_N - K."""
+        """Payoff M_N - S_N, M_n = max(S_0..S_n). Example 1.2.4."""
         return path[-1] - self.delivery_price
 
 
@@ -93,8 +93,7 @@ class LookbackOption(PathDependentPayoff):
 
 
 class AsianOption(PathDependentPayoff):
-    """Payoff max(Y_N/(N+1) - K, 0), Y_n = suma corriente S_0..S_n.
-    Ejercicio 1.8. Ver docs/theory/04_opcion_asiatica.md."""
+    """Payoff max(Y_N/(N+1) - K, 0), Y_n = running sum S_0..S_n - Exercise 1.8."""
 
     def __init__(self, strike: float, n_periods: int) -> None:
         self.strike = strike

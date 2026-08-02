@@ -7,23 +7,23 @@ class RecombiningLattice:
 
     def num_nodes(self, step: int) -> int:
         """
-        En un árbol binomial recombinante estándar, el número de nodos
-        en el paso n es n + 1.
+        In a standard recombining binomial tree, the number of nodes
+        at step n is n + 1.
 
-        No usado todavía en el capítulo 1 -- se conserva a propósito
-        como utilidad de la estructura combinatoria pura, pensando en
-        el Capítulo 6 (activos dependientes de tipos de interés), donde
-        se necesitará la forma del árbol independientemente del
-        proceso estocástico que lo recorra.
+        Not used yet in chapter 1 -- kept on purpose
+        as a pure combinatorial structure utility, with an eye towards
+        Chapter 6 (interest rate dependent assets), where
+        the shape of the tree will be needed regardless of the
+        stochastic process that traverses it.
         """
         return step + 1
 
     def enumerate_paths(self) -> Iterator[str]:
         """
-        Genera las 2**n_periods secuencias 'HHH...', 'HHT...', etc.
-        Es el mecanismo de cálculo real de este batch al no tener aún l
-        a reducción de estado de la Sección1.3, el motor recorre 
-        estas secuencias completas.
+        Generates the 2n_periods sequences 'HHH...', 'HHT...', etc.
+        It is the actual calculation mechanism of this batch since, not yet having
+        the state reduction of Section 1.3, the engine traverses
+        these complete sequences.
         """
         if self.n_periods == 0:
             yield ""

@@ -1,34 +1,36 @@
-# Portfolio Quant: Valoración de Opciones mediante Árboles Binomiales
+# The Binomial Asset Pricing Model
 
-Implementación en Python de los modelos de valoración de derivados financieros basados en el marco teórico de *Stochastic Calculus for Finance I* (Steven E. Shreve). Este proyecto traduce rigurosas ecuaciones de cálculo estocástico en una arquitectura de software modular, escalable y optimizada computacionalmente.
+Python implementation of financial derivative pricing models based on the theoretical framework of *Stochastic Calculus for Finance I* (Steven E. Shreve). This project translates rigorous stochastic calculus equations into a modular, scalable, and computationally optimized software architecture.
 
-## Estado del Proyecto: Hitos Alcanzados (Capítulo 1)
+## Project Status: Milestones Achieved (Chapter 1)
 
-El motor de valoración base está completo y validado, cubriendo los fundamentos del modelo binomial multiperiodo:
+The core pricing engine is complete and validated, covering the fundamentals of the multi-period binomial model:
 
-*   **Arquitectura Desacoplada:** Separación estricta entre la dinámica del activo subyacente (`equity_model.py`), la definición de los pagos (`payoffs.py`) y la lógica de resolución algorítmica (`engines.py`).
-*   **Polimorfismo de Payoffs:** Interfaz unificada que soporta tanto opciones estándar (Europeas) como opciones dependientes de la trayectoria (ej. Lookback Options) sin romper los principios SOLID.
-*   **Optimización Algorítmica (State Reduction):** Implementación de un `ReducedStateEngine` que colapsa trayectorias recombinantes. Para derivados no dependientes de la trayectoria (call, put), esto reduce la complejidad e de $O(2^N)$ a $O(N^2)$; para derivados dependientes de la trayectoria como la lookback, la reducción de estado a $(S_n, M_n)$ sigue siendo polinómica $(O(N^3))$ frente a la enumeración exhaustiva, permitiendo valorar árboles de $N=50$ en fracciones de segundo.
-*   **Validación de Estrés:** Batería de pruebas exhaustiva (`pytest`) que asegura la ausencia de fugas exponenciales en tiempo de cómputo y garantiza la fidelidad matemática frente a los ejemplos teóricos ("Golden Examples").
+* **Decoupled Architecture:** Strict separation between the underlying asset dynamics (`equity_model.py`), payoff definitions (`payoffs.py`), and algorithmic resolution logic (`engines.py`).
+* **Payoff Polymorphism:** Unified interface supporting both standard (European) and path-dependent options (e.g., Lookback Options) without breaking SOLID principles.
+* **Algorithmic Optimization (State Reduction):** Implementation of a `ReducedStateEngine` that collapses recombining paths. For path-independent derivatives (call, put), this reduces time complexity from $O(2^N)$ to $O(N^2)$; for path-dependent derivatives like the lookback option, the state reduction to $(S_n, M_n)$ remains polynomial $(O(N^3))$ compared to exhaustive enumeration, allowing trees of $N=50$ to be priced in fractions of a second.
+* **Stress Validation:** Exhaustive test suite (`pytest`) that ensures the absence of exponential leaks in compute time and guarantees mathematical fidelity against theoretical examples ("Golden Examples").
 
-## Estructura del Repositorio
+## Repository Structure
 
-La base de código está organizada para separar claramente la teoría matemática de la implementación y las pruebas:
+The codebase is organized to clearly separate mathematical theory from implementation and testing:
 
-*   **`docs/theory/`**: Notas teóricas en formato Markdown detallando el modelo de un periodo, multiperiodo, la reducción computacional y las particularidades de las opciones asiáticas.
-*   **`src/binomial_pricer/`**: Código fuente principal. Contiene las clases del modelo, el generador del árbol (`lattice.py`), y los motores de valoración (`engines.py`).
-*   **`tests/`**: Suite de pruebas unitarias y de integración para validar la correcta instanciación de modelos, evaluación de payoffs y eficiencia algorítmica de los motores.
-*   **`shreve_v1_cuaderno.ipynb`**: Cuaderno Jupyter destinado al análisis y la utilización del modelo.
+* **`docs/theory/`**: Theoretical notes in Markdown format detailing the one-period and multi-period models, computational state reduction, and the specificities of Asian options.
+* **`src/binomial_pricer/`**: Main source code. Contains the model classes, the tree generator (`lattice.py`), and the pricing engines (`engines.py`).
+* **`tests/`**: Unit and integration testing suite to validate correct model instantiation, payoff evaluation, and the algorithmic efficiency of the engines.
+* **`shreve_v1_cuaderno.ipynb`**: Jupyter Notebook intended for model analysis and usage.
 
-## Requisitos y Uso
+## Requirements and Usage
 
-El proyecto utiliza Python 3.10+ y aprovecha el tipado estricto (Type Hints). 
+The project uses Python 3.10+ and leverages strict typing (Type Hints).
 
-Para ejecutar la suite de validación matemática y computacional:
+To run the mathematical and computational validation suite:
 
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 pytest tests/
 
-# Ejecutar los tests con detalle de salida
+# Run tests with detailed output
 pytest tests/ -v
+
+```
