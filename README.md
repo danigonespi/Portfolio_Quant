@@ -18,7 +18,7 @@ The codebase is organized to clearly separate mathematical theory from implement
 * **`docs/theory/`**: Theoretical notes in Markdown format detailing the one-period and multi-period models, computational state reduction, and the specificities of Asian options.
 * **`src/binomial_pricer/`**: Main source code. Contains the model classes, the tree generator (`lattice.py`), and the pricing engines (`engines.py`).
 * **`tests/`**: Unit and integration testing suite to validate correct model instantiation, payoff evaluation, and the algorithmic efficiency of the engines.
-* **`shreve_v1_cuaderno.ipynb`**: Jupyter Notebook intended for model analysis and usage.
+* **`shreve_v1_notebook.ipynb`**: Jupyter Notebook intended for model analysis and usage.
 
 ## Requirements and Usage
 
