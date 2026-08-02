@@ -19,9 +19,9 @@ class PricingEngine:
     def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
               position: Literal["short", "long"] = "short") -> PricingResult:
         """
-        Calcula el precio libre de arbitraje y la cobertura usando inducción hacia atrás.
-        El caso recursivo simétrico completo (incluyendo T) se demuestra en el Ejercicio 1.4.
-        Utiliza Eq. (1.2.18), Eq. (1.2.16) y Eq. (1.2.17)
+        Calculates the arbitrage-free price and the hedge using backward induction.
+        The complete symmetric recursive case (including T) is proved in Exercise 1.4.
+        Uses Eq. (1.2.18), Eq. (1.2.16) and Eq. (1.2.17)
         """
         lattice = RecombiningLattice(n_periods)
         value_grid = {}
@@ -67,13 +67,12 @@ class ReducedStateEngine:
     def price(self, model: BinomialStockModel, payoff: Payoff, n_periods: int,
               position: Literal["short", "long"] = "short") -> PricingResult:
         """
-        Calcula el precio libre de arbitraje y la cobertura mediante la reducción
-        del espacio de estados (Sección 1.3).
-        
-        Aplica la Eq. (1.3.1) para la recursión del valor neutral al riesgo,
-        generalizada mediante las fórmulas algorítmicas canónicas sin numerar
-        para v_n(s) y Delta_n(s) (opciones independientes de trayectoria), 
-        y v_n(s, m) y Delta_n(s, m) (opciones dependientes de trayectoria).
+        Calculates the arbitrage-free price and the hedge through state space reduction (Section 1.3).
+
+        Applies Eq. (1.3.1) for the risk-neutral value recursion,
+        generalized by the unnumbered canonical algorithmic formulas
+        for v_n(s) and Delta_n(s) (path-independent options), 
+        and v_n(s, m) and Delta_n(s, m) (path-dependent options).
         """
         value_grid = {}
         delta_grid = {}

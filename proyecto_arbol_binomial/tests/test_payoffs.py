@@ -26,7 +26,7 @@ class TestForward:
 
 class TestLookbackOption:
     def test_compute_manual_path_htt(self):
-        """V3(HTT) del Ejemplo 1.2.4 evaluado de forma aislada."""
+        """V3(HTT) from Example 1.2.4 evaluated in isolation."""
         payoff = LookbackOption()
         path = np.array([4.0, 8.0, 4.0, 2.0])
         assert payoff.compute(path) == 6.0
@@ -57,7 +57,7 @@ class TestPathDependentPayoffHooks:
 
 class TestAsianOption:
     def test_compute_manual_path_hth(self):
-        """Trayectoria manual HTH aislada: S=[4, 8, 4, 8], Y_3=24. Payoff = max(24/4 - 4, 0) = 2.0."""
+        """Isolated manual HTH path: S=[4, 8, 4, 8], Y_3=24. Payoff = max(24/4 - 4, 0) = 2.0."""
         payoff = AsianOption(strike=4.0, n_periods=3)
         path = np.array([4.0, 8.0, 4.0, 8.0])
         assert payoff.compute(path) == 2.0

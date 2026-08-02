@@ -8,29 +8,28 @@ class TestNoArbitrageValidation:
             BinomialStockModel(S0=0.0, u=2.0, d=0.5, r=0.25)
 
     def test_rejects_non_positive_d(self):
-        with pytest.raises(ValueError, match="d debe ser estrictamente positivo"):
+        with pytest.raises(ValueError, match="d must be strictly positive"):
             BinomialStockModel(S0=4.0, u=2.0, d=0.0, r=0.25)
 
     def test_rejects_d_geq_1_plus_r(self):
-        """Ejercicio 1.1: viola d < 1+r."""
+        """Exercise 1.1: violates d < 1+r."""
         with pytest.raises(ValueError, match=r"d \(1\.5\) >= 1\+r \(1\.25\)"):
             BinomialStockModel(S0=4.0, u=2.0, d=1.5, r=0.25)
 
     def test_rejects_1_plus_r_geq_u(self):
-        """Ejercicio 1.1: viola 1+r < u."""
+        """Exercise 1.1: violates 1+r < u."""
         with pytest.raises(ValueError, match=r"1\+r \(1\.25\) >= u \(1\.1\)"):
             BinomialStockModel(S0=4.0, u=1.1, d=0.5, r=0.25)
 
     def test_boundary_d_equals_1_plus_r_still_raises(self):
-        """Igualdad estricta también debe rechazarse -- (1.1.2) exige '<', no '<='."""
+        """Strict equality must also be rejected -- (1.1.2) requires '<', not '<='."""
         with pytest.raises(ValueError):
             BinomialStockModel(S0=4.0, u=2.0, d=1.25, r=0.25)
 
 
 class TestImmutability:
     def test_model_cannot_be_mutated_after_construction(self, base_model):
-        """Sin frozen=True, la validación de __post_init__ se puede saltar
-        reasignando un atributo después de construir el objeto -- ver revisión."""
+        """Without frozen=True, the post_init validation can be bypassed by reassigning an attribute after object construction -- see review."""
         with pytest.raises(Exception):
             base_model.u = 1.0
 
@@ -42,7 +41,7 @@ class TestRiskNeutralProbability:
         assert q_tilde == pytest.approx(0.5)
 
     def test_p_and_q_always_sum_to_one(self, base_model):
-        """Identidad algebraica de (1.1.8): p̃+q̃=1 para cualquier u,d,r válidos."""
+        """Algebraic identity of (1.1.8): p̃+q̃=1 for any valid u,d,r."""
         p_tilde, q_tilde = base_model.risk_neutral_prob
         assert p_tilde + q_tilde == pytest.approx(1.0)
 

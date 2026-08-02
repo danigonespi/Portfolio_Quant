@@ -6,8 +6,7 @@ from binomial_pricer.payoffs import EuropeanCall, LookbackOption, EuropeanPut, A
 from binomial_pricer.engines import PricingEngine, ReducedStateEngine
 
 def test_v0_differs_from_naive_real_world_expectation(base_model):
-    """V0 (bajo p̃,q̃, Eq. 1.1.10) debe diferir de la esperanza descontada
-    bajo una probabilidad real p arbitraria."""
+    """V0 (under p̃,q̃, Eq. 1.1.10) must differ from the discounted expectation under an arbitrary real probability p."""
     call = EuropeanCall(strike=5.0)
     engine = PricingEngine()
     result = engine.price(base_model, call, n_periods=1)
@@ -19,7 +18,7 @@ def test_v0_differs_from_naive_real_world_expectation(base_model):
     assert result.v0 != pytest.approx(naive_expectation)
 
 def test_engine_price_matches_manual_formula(base_model):
-    """Confirma que price() aplica (1.1.9)/(1.1.10) para cualquier payoff."""
+    """Confirms that price() applies (1.1.9)/(1.1.10) for any payoff."""
     from binomial_pricer.payoffs import EuropeanPut
     put = EuropeanPut(strike=5.0)
     engine = PricingEngine()
@@ -35,7 +34,7 @@ def test_engine_price_matches_manual_formula(base_model):
     assert result.v0 == pytest.approx(expected_v0)
 
 def test_exercise_1_6_hedging_long_position(base_model):
-    """Ejercicio 1.6: cobertura de posición larga invierte las deltas."""
+    """Exercise 1.6: hedging a long position inverts the deltas."""
     call = EuropeanCall(strike=5.0)
     engine = PricingEngine()
     res_short = engine.price(base_model, call, n_periods=1, position="short")
@@ -44,7 +43,7 @@ def test_exercise_1_6_hedging_long_position(base_model):
     assert res_long.delta_grid[""] == pytest.approx(-res_short.delta_grid[""])
 
 def test_exercise_1_7_hedging_long_multiple_periods(base_model):
-    """Ejercicio 1.7: cobertura de lookback invierte las deltas en todo el árbol."""
+    """Exercise 1.7: lookback hedging inverts the deltas throughout the tree."""
     payoff = LookbackOption()
     engine = PricingEngine()
     
@@ -88,9 +87,8 @@ def test_reduced_engine_long_position_inverts_delta(base_model):
 
 def test_reduced_engine_computational_complexity_n50(base_model):
     """
-    Verifica empíricamente que la complejidad es verdaderamente reducida (polinómica).
-    Se usa LookbackOption porque sus estados (s, max) sí recombinan. 
-    (Nota: Una opción Asiática Aritmética no recombina y generaría O(2^N) estados).
+    Verifies that the complexity is truly reduced (polynomial).
+    LookbackOption is used because its states (s, max) do recombine.
     """
     payoff = LookbackOption()
     
