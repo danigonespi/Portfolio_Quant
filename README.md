@@ -34,3 +34,7 @@ pytest tests/
 pytest tests/ -v
 
 ```
+
+## License
+
+Released under the MIT License — see [LICENSE](../LICENSE).
