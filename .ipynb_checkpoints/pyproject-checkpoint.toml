@@ -5,10 +5,6 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "binomial_pricer"
 version = "0.1.0"
-authors = [
-  { name="Daniel González Espinosa" }
-]
-description = "Python implementation of financial derivative pricing models based on Shreve's Stochastic Calculus for Finance I."
 requires-python = ">=3.10"
 dependencies = [
     "numpy", 

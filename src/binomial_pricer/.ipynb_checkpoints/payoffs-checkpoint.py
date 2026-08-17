@@ -75,12 +75,12 @@ class Forward(Payoff):
         self.delivery_price = delivery_price
 
     def compute(self, path: np.ndarray) -> float:
-        """Forward contract payoff: S_N - K."""
+        """Payoff M_N - S_N, M_n = max(S_0..S_n). Example 1.2.4."""
         return path[-1] - self.delivery_price
 
 
 class LookbackOption(PathDependentPayoff):
-    """Payoff M_N - S_N, M_n = max(S_0..S_n). Example 1.2.4."""
+    """Payoff M_N - S_N, M_n = max(S_0..S_n). Ejemplo 1.2.4."""
     
     def initial_aggregate(self, s0: float) -> float:
         return s0
