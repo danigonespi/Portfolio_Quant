@@ -19,7 +19,7 @@ class Payoff(ABC):
         """
         Calculates the derivative payoff.
         Although in the one-period model only the final price is evaluated,
-        the signature requires the complete path [S0, ..., Sn] to keep
+        the signature requires the complete path [s_0, ..., s_n] to keep
         the interface compatible with path-dependent options (see PathDependentPayoff).
         """
         pass
@@ -27,7 +27,7 @@ class Payoff(ABC):
 
 class PathDependentPayoff(Payoff, ABC):
     """
-    Payoff reducible to a state (S_n, aggregate_n). compute()
+    Payoff reducible to a state (s_n, aggregate_n). compute()
     is implemented only once here from three hooks, so that
     ReducedStateEngine (Section 1.3) can never silently diverge from this
     reference version -- see test_cross_validation_* in test_engines.py.
@@ -57,7 +57,7 @@ class EuropeanCall(Payoff):
         self.strike = strike
 
     def compute(self, path: np.ndarray) -> float:
-        """European call option payoff: max(S_N - K, 0)."""
+        """European call option payoff: max(s_N - K, 0)."""
         return max(path[-1] - self.strike, 0.0)
 
 
@@ -66,7 +66,7 @@ class EuropeanPut(Payoff):
         self.strike = strike
 
     def compute(self, path: np.ndarray) -> float:
-        """European put option payoff: max(K - S_N, 0)."""
+        """European put option payoff: max(s - S_N, 0)."""
         return max(self.strike - path[-1], 0.0)
 
 
@@ -75,12 +75,12 @@ class Forward(Payoff):
         self.delivery_price = delivery_price
 
     def compute(self, path: np.ndarray) -> float:
-        """Forward contract payoff: S_N - K."""
+        """Forward contract payoff: s_N - K."""
         return path[-1] - self.delivery_price
 
 
 class LookbackOption(PathDependentPayoff):
-    """Payoff M_N - S_N, M_n = max(S_0..S_n). Example 1.2.4."""
+    """Payoff m_N - s_N, m_n = max(s_0..s_n). Example 1.2.4."""
     
     def initial_aggregate(self, s0: float) -> float:
         return s0
@@ -93,7 +93,7 @@ class LookbackOption(PathDependentPayoff):
 
 
 class AsianOption(PathDependentPayoff):
-    """Payoff max(Y_N/(N+1) - K, 0), Y_n = running sum S_0..S_n - Exercise 1.8."""
+    """Payoff max(y_N/(N+1) - K, 0), y_n = running sum s_0..s_n. Exercise 1.8."""
 
     def __init__(self, strike: float, n_periods: int) -> None:
         self.strike = strike

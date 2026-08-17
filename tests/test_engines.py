@@ -82,7 +82,7 @@ def test_reduced_engine_long_position_inverts_delta(base_model):
     res_short = ReducedStateEngine().price(base_model, call, n_periods=1, position="short")
     res_long = ReducedStateEngine().price(base_model, call, n_periods=1, position="long")
     
-    assert res_long.delta_grid[(0, base_model.S0)] == pytest.approx(-res_short.delta_grid[(0, base_model.S0)])
+    assert res_long.delta_grid[(0, base_model.s0)] == pytest.approx(-res_short.delta_grid[(0, base_model.s0)])
 
 
 def test_reduced_engine_computational_complexity_n50(base_model):

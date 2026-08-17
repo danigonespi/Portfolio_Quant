@@ -10,9 +10,9 @@ def test_example_1_1_1(base_model):
     assert result.delta0 == pytest.approx(0.5)
 
 def test_exercise_1_3_derivative_equals_stock(base_model):
-    """Exercise 1.3: V1=S1 (call strike=0) -> V0 must equal S0 exactly."""
+    """Exercise 1.3: V1=S1 (call strike=0) -> V0 must equal s0 exactly."""
     result = PricingEngine().price(base_model, EuropeanCall(strike=0.0), n_periods=1)
-    assert result.v0 == pytest.approx(base_model.S0)
+    assert result.v0 == pytest.approx(base_model.s0)
     assert result.delta0 == pytest.approx(1.0)
 
 @pytest.mark.parametrize("delta0, gamma0", [(1.0, 1.0), (-2.0, 3.0), (0.5, -1.5), (10.0, -4.0)])

@@ -43,7 +43,7 @@ class PricingEngine:
                 v_next_h = value_grid[prefix + "H"]
                 v_next_t = value_grid[prefix + "T"]
 
-                current_s = model.price_path(prefix)[-1] if prefix else model.S0
+                current_s = model.price_path(prefix)[-1] if prefix else model.s0
                 s_next_h = current_s * model.u
                 s_next_t = current_s * model.d
 
@@ -85,11 +85,11 @@ class ReducedStateEngine:
             d_powers[i] = d_powers[i-1] * model.d
             
         def get_s(j: int, n_step: int) -> float:
-            return model.S0 * u_powers[j] * d_powers[n_step - j]
+            return model.s0 * u_powers[j] * d_powers[n_step - j]
 
         states_by_level = {n: set() for n in range(n_periods + 1)}
         
-        m0 = payoff.initial_aggregate(model.S0)
+        m0 = payoff.initial_aggregate(model.s0)
         states_by_level[0].add((0, m0)) 
         
         for n in range(n_periods):
@@ -133,7 +133,7 @@ class ReducedStateEngine:
                 value_grid[state_key] = v_n
                 delta_grid[state_key] = delta_n
                 
-        key0 = (0, model.S0) if m0 is None else (0, model.S0, m0)
+        key0 = (0, model.s0) if m0 is None else (0, model.s0, m0)
         v0 = value_grid.get(key0, 0.0)
         delta0 = delta_grid.get(key0, 0.0)
         

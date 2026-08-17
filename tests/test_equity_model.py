@@ -4,27 +4,27 @@ from binomial_pricer.equity_model import BinomialStockModel
 
 class TestNoArbitrageValidation:
     def test_rejects_non_positive_S0(self):
-        with pytest.raises(ValueError, match="S0"):
-            BinomialStockModel(S0=0.0, u=2.0, d=0.5, r=0.25)
+        with pytest.raises(ValueError, match="s0"):
+            BinomialStockModel(s0=0.0, u=2.0, d=0.5, r=0.25)
 
     def test_rejects_non_positive_d(self):
         with pytest.raises(ValueError, match="d must be strictly positive"):
-            BinomialStockModel(S0=4.0, u=2.0, d=0.0, r=0.25)
+            BinomialStockModel(s0=4.0, u=2.0, d=0.0, r=0.25)
 
     def test_rejects_d_geq_1_plus_r(self):
         """Exercise 1.1: violates d < 1+r."""
         with pytest.raises(ValueError, match=r"d \(1\.5\) >= 1\+r \(1\.25\)"):
-            BinomialStockModel(S0=4.0, u=2.0, d=1.5, r=0.25)
+            BinomialStockModel(s0=4.0, u=2.0, d=1.5, r=0.25)
 
     def test_rejects_1_plus_r_geq_u(self):
         """Exercise 1.1: violates 1+r < u."""
         with pytest.raises(ValueError, match=r"1\+r \(1\.25\) >= u \(1\.1\)"):
-            BinomialStockModel(S0=4.0, u=1.1, d=0.5, r=0.25)
+            BinomialStockModel(s0=4.0, u=1.1, d=0.5, r=0.25)
 
     def test_boundary_d_equals_1_plus_r_still_raises(self):
         """Strict equality must also be rejected -- (1.1.2) requires '<', not '<='."""
         with pytest.raises(ValueError):
-            BinomialStockModel(S0=4.0, u=2.0, d=1.25, r=0.25)
+            BinomialStockModel(s0=4.0, u=2.0, d=1.25, r=0.25)
 
 
 class TestImmutability:
